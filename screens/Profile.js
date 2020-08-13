@@ -5,7 +5,23 @@ import { Text, Card, Button } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const Profile = (props) => {
-    const {id, name, picture, phone, salary,email, position} = props.route.params.l;
+    const {_id, name, picture, phone, salary,email, position} = props.route.params.item;
+    console.log(_id);
+
+    const deleteProfile = () => {
+        fetch('https://employeappreact.herokuapp.com/delete',{
+            method: 'POST',
+            headers: {
+                "Content-Type" : "application/json"
+            },
+            body: JSON.stringify({
+                id:_id
+            })
+        })
+        .then(res => res.json())
+        .then(data => console.log(data))
+        .catch(err => console.log(err))
+    }
     const openDial = ()=>{
        if(Platform.OS === "android"){
             Linking.openURL(`tel:${phone}`)
@@ -20,7 +36,7 @@ const Profile = (props) => {
                 <View style={{alignItems:'center'}}>
                     <Image
                         style={{width:90, height:90, borderRadius:90/2, marginTop: 40}}
-                        source={{uri:'https://images.pexels.com/photos/4823380/pexels-photo-4823380.jpeg?auto=compress&cs=tinysrgb&h=750&w=1260'}}
+                        source={{uri:`${picture}`}}
                     />
                 </View>
                 <View style={{alignItems:'center', marginTop: 10}}>
@@ -77,7 +93,11 @@ const Profile = (props) => {
                                 />
                             }
                             title="Edit"
-                            onPress={() => {console.log('Saved')}}
+                            onPress={() => {
+                                props.navigation.navigate("Create",{
+                                    _id:_id, name:name, picture:picture, phone:phone, salary:salary,email:email, position:position
+                                })
+                            }}
                     />
                     <Button
                         buttonStyle={{backgroundColor:'#c0392b', marginTop:10, width:150}}
@@ -90,7 +110,10 @@ const Profile = (props) => {
                                 />
                             }
                             title="Remove"
-                            onPress={() => {console.log('Saved')}}
+                            onPress={() => {
+                                deleteProfile()
+                                props.navigation.navigate("Home");
+                            }}
                     />
                 </View>
             </LinearGradient>

@@ -1,19 +1,47 @@
 import React,{useState} from 'react'
-import { StyleSheet, Image, ScrollView, Modal, Alert, View } from 'react-native'
+import { 
+  StyleSheet, 
+  Image, 
+  ScrollView, 
+  Modal, 
+  Alert, 
+  View,
+  KeyboardAvoidingView
+ } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Input, Button } from 'react-native-elements';
 import ImagePicker from 'react-native-image-picker';
 import API from '../constants/Api'
 
-const CreateEmployee = () => {
-    const [name, setName] = useState('');
-    const [phone, setPhone] = useState('');
-    const [email, setEmail] = useState('');
-    const [salary, setSalary] = useState('');
-    const [picture, setPicture] = useState(null);
-    const [position, setPosition] = useState(null);
-    const [modal, setModal] = useState(false);
 
+const CreateEmployee = ({navigation, route}) => {
+    const getProfile = (type) =>{
+      if(route.params){
+        switch(type){
+          case "name":
+            return route.params.name
+          case "phone":
+            return route.params.phone
+          case "email":
+            return route.params.email
+          case "salary":
+            return route.params.salary
+          case "picture":
+            return route.params.picture
+          case "position":
+            return route.params.position
+        }
+      }
+      return ""
+    }
+    const [name, setName]           = useState(getProfile("name"));
+    const [phone, setPhone]         = useState(getProfile("phone"));
+    const [email, setEmail]         = useState(getProfile("email"));
+    const [salary, setSalary]       = useState(getProfile("salary"));
+    const [picture, setPicture]     = useState(getProfile("picture"));
+    const [position, setPosition]   = useState(getProfile("position"));
+    const [modal, setModal]         = useState(false);
+    const [enableShift, setEnableShift] = useState(false);
     const submitData = () => {
       fetch('https://employeappreact.herokuapp.com/send',{ 
         method: "POST",
@@ -30,9 +58,42 @@ const CreateEmployee = () => {
         })
       })
       .then(res => {res.json()})
-      .then(data => {console.log(data)})
-      .catch(err => {console.log(err)})
+      .then(data => {
+        console.log(data)
+      })
+      .catch(err => {
+        console.log(err)
+        throw err
+      })
     }
+
+    const updateData = () =>{
+      fetch('https://employeappreact.herokuapp.com/update',{ 
+        method: "POST",
+        headers: {
+          "Content-Type" : "application/json"
+        },
+        body: JSON.stringify({
+          id: route.params._id,
+          name:name,
+          email:email,
+          phone:phone,
+          picture:picture,
+          salary:salary,
+          position:position,
+        })
+      })
+      .then(res => {res.json()})
+      .then(() => {
+        Alert.alert(`update saved successfuly`)
+      })
+      .catch(err => {
+        console.log(err)
+        throw err
+      })
+    }
+
+
     const options = {
         title: 'Select Photo',
         storageOptions: {
@@ -41,7 +102,7 @@ const CreateEmployee = () => {
         },
     }
     
-    pickImage = () =>{
+    pickImage = () => {
         ImagePicker.showImagePicker(options, (response) => {
             console.log('Response = ', response);
             if (response.didCancel) {
@@ -82,36 +143,61 @@ const CreateEmployee = () => {
             console.log(err)
           })
       }
+      const imageNotNull = (img) => {
+        if(img == ""){
+          return null;
+        }
+        else{
+          return img;
+        }
+      }
+
     return (
-        <ScrollView style= {styles.root}>
+      <KeyboardAvoidingView behavior="position"  style={styles.root} enabled={enableShift}>
+        <View>
             <Input
                 placeholder='Name'
                 value = {name}
+                onFocus={()=>{
+                  setEnableShift(false)
+                }}
                 onChangeText={text => setName(text)}
               />
              <Input
                 placeholder='Phone'
                 value = {phone}
                 keyboardType="number-pad"
+                onFocus={()=>{
+                  setEnableShift(false)
+                }}
                 onChangeText={text => setPhone(text)}
               />
               <Input
                 placeholder='Email'
                 value = {email}
+                onFocus={()=>{
+                  setEnableShift(false)
+                }}
                 onChangeText={text => setEmail(text)}
               />
               <Input
                 placeholder='Salary'
                 value = {salary}
+                onFocus={()=>{
+                  setEnableShift(true)
+                }}
                 onChangeText={text => setSalary(text)}
               />
               <Input
                 placeholder='Position'
                 value = {position}
+                onFocus={()=>{
+                  setEnableShift(true)
+                }}
                 onChangeText={text => setPosition(text)}
               />
               {
-                picture &&
+                imageNotNull(picture) &&
                 <View style={{marginBottom: 5, alignItems:'center'}}>
                 <Image
                     style={{width:100, height:100, borderRadius: 50}}
@@ -134,19 +220,46 @@ const CreateEmployee = () => {
                     title="Upload Photo"
                     onPress={() => {setModal(true)}}
                 />
-                <Button
-                buttonStyle={{backgroundColor:'#2980b9', marginTop:10}}
-                icon={
-                    <Icon
-                        style={{marginRight:10}}
-                        name="save"
-                        size={15}
-                        color="white"
-                        />
-                    }
-                    title="Save"
-                    onPress={() => {submitData()}}
-                />
+
+                {
+                  route.params ? 
+                  <Button
+                  buttonStyle={{backgroundColor:'#27ae60', marginTop:10}}
+                  icon={
+                      <Icon
+                          style={{marginRight:10}}
+                          name="check"
+                          size={15}
+                          color="white"
+                          />
+                      }
+                      title="Update"
+                      onPress={() => {
+                        updateData();
+                        navigation.navigate("Home");
+                      }}
+                  />
+                  :
+                  <Button
+                  buttonStyle={{backgroundColor:'#2980b9', marginTop:10}}
+                  icon={
+                      <Icon
+                          style={{marginRight:10}}
+                          name="save"
+                          size={15}
+                          color="white"
+                          />
+                      }
+                      title="Save"
+                      onPress={() => {
+                        submitData();
+                        navigation.navigate("Home");
+                      }}
+                  />
+
+                }
+                
+                
 
                 <Modal
                     animationType="slide"
@@ -180,7 +293,8 @@ const CreateEmployee = () => {
                             />
                     </View>
                 </Modal>
-        </ScrollView>
+        </View>
+        </KeyboardAvoidingView>
     )
 }
 

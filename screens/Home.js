@@ -1,38 +1,53 @@
-import React from 'react'
-import { StyleSheet, View, Button, FlatList, Image, Text } from 'react-native'
+import React,{useState,useEffect} from 'react'
+import { StyleSheet, View, Button, FlatList, Image, Text,ActivityIndicator } from 'react-native'
 import { Card, ListItem, Icon } from 'react-native-elements'
-
+import { set } from 'react-native-reanimated';
+import {useSelector, useDispatch} from 'react-redux';
 
 const Home = (props) => {
-    const DATA = [
-        {
-            id: 1, 
-            name : 'Muhammad', 
-            email:'fandiadhitya10@gmail.com',
-            salary:'$100',
-            phone: '085275502364', 
-            position: 'web developer',
-            picture : 'https://images.pexels.com/photos/4823380/pexels-photo-4823380.jpeg?auto=compress&cs=tinysrgb&h=750&w=1260'
-        },
-        {
-            id: 2, 
-            name : 'Fandi', 
-            email:'fandiadhitya96@gmail.com',
-            salary:'$100',
-            phone: '085275502364', 
-            position: 'web developer',
-            picture : 'https://images.pexels.com/photos/4823380/pexels-photo-4823380.jpeg?auto=compress&cs=tinysrgb&h=750&w=1260'
-        },
-        {
-            id: 3, 
-            name : 'Adhitya', 
-            email:'fandiadhitya06@gmail.com',
-            salary:'$100',
-            phone: '085275502364', 
-            position: 'web developer',
-            picture : 'https://images.pexels.com/photos/4823380/pexels-photo-4823380.jpeg?auto=compress&cs=tinysrgb&h=750&w=1260'
-        },
-    ];
+    const dispatch = useDispatch();
+    const {data, loading} = useSelector((state) => {
+        return state
+    });
+
+    // console.log(data, loading);
+    // const [data, setData] = useState([]);
+    // const [loading, setLoading] = useState(true);
+    const [refresh, setRefresh] = useState(true);
+
+    const fetchData = () =>{
+        fetch('https://employeappreact.herokuapp.com/')
+        .then(res => res.json())
+        .then(results =>{
+            // setData(results)
+            // setLoading(false)
+            dispatch({type:'ADD_DATA', payload:results})
+            dispatch({type:'SET_LOADING', payload:false})
+        })
+        .catch(err => {
+            console.log(err);
+            throw err;
+        })
+    }
+    useEffect(()=>{
+        fetchData()
+        setTimeout(()=>{
+            setRefresh(false)
+        }, 1000)
+    },[]);
+
+    const renderItem = ({item}) => (
+        <ListItem
+            onPress={()=>{
+                props.navigation.navigate("Profile",{item})
+            }}
+            key={item.id}
+            leftAvatar={{ source: { uri: item.picture } }}
+            title={item.name}
+            subtitle={item.email}
+            bottomDivider
+        />
+    )
     return (
         <View style={styles.root}>
             <Button
@@ -43,18 +58,20 @@ const Home = (props) => {
                 accessibilityLabel="Learn more about this purple button"
             />
             {
-                DATA.map((l, i) => (
-                <ListItem
-                    onPress={()=>{
-                        props.navigation.navigate("Profile",{l})
-                    }}
-                    key={i}
-                    leftAvatar={{ source: { uri: l.picture } }}
-                    title={l.name}
-                    subtitle={l.email}
-                    bottomDivider
+                loading?
+                    <View style={styles.container}>
+                        <ActivityIndicator size="large" color="#2c3e50" />
+                    </View>
+                :
+                <FlatList
+                    refreshing={refresh}
+                    onRefresh= {() => 
+                        fetchData()
+                    }
+                    data={data}
+                    renderItem={renderItem}
+                    keyExtractor={item => item._id}
                 />
-                ))
             }
         </View>
     )
@@ -66,6 +83,11 @@ const styles = StyleSheet.create({
     root: {
         padding:5
     },
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        marginVertical:50
+      },
     card : {
         flexDirection:'row',
     },
