@@ -1,6 +1,7 @@
 const initState = {
     data : [],
-    loading: true
+    loading: true,
+    refresh : true
 }
 
 export const reducers = (state = initState, action)=>{
@@ -14,6 +15,12 @@ export const reducers = (state = initState, action)=>{
         return{
             ...state,
             loading:action.payload
+        }
+    }
+    if(action.type == "SET_REFRESH"){
+        return{
+            ...state,
+            refresh:action.payload
         }
     }
     return state

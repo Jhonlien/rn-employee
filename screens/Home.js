@@ -6,14 +6,13 @@ import {useSelector, useDispatch} from 'react-redux';
 
 const Home = (props) => {
     const dispatch = useDispatch();
-    const {data, loading} = useSelector((state) => {
+    const {data, loading, refresh} = useSelector((state) => {
         return state
     });
 
     // console.log(data, loading);
     // const [data, setData] = useState([]);
     // const [loading, setLoading] = useState(true);
-    const [refresh, setRefresh] = useState(true);
 
     const fetchData = () =>{
         fetch('https://employeappreact.herokuapp.com/')
@@ -32,7 +31,7 @@ const Home = (props) => {
     useEffect(()=>{
         fetchData()
         setTimeout(()=>{
-            setRefresh(false)
+            dispatch({type:'SET_REFRESH', payload:false})
         }, 1000)
     },[]);
 
